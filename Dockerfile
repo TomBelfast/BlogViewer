@@ -48,15 +48,17 @@ RUN curl -fsSL https://bun.sh/install | bash -s -- "bun-v${BUN_VERSION}"
 # Copy application code
 COPY . .
 
+# Install JavaScript dependencies
+RUN bun install
+
 # Precompile bootsnap code for faster boot times
 RUN bundle exec bootsnap precompile app/ lib/
 
-# Add .npmrc secret
-RUN --mount=type=secret,id=npmrc \
-    cat /run/secrets/npmrc > .npmrc
+# Build JavaScript assets with bun
+RUN NODE_ENV=production bun run build
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 FRONTEND_URL=${FRONTEND_URL} ./bin/rails assets:precompile && rm .npmrc
+RUN SECRET_KEY_BASE_DUMMY=1 FRONTEND_URL=${FRONTEND_URL} ./bin/rails assets:precompile
 
 # Final stage for app image
 FROM base

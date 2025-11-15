@@ -1,0 +1,50 @@
+# Cursor Rules for BlogBowl Project
+
+## CRITICAL: Testing Requirements Before Responding
+
+**NEVER respond with "should work" or "should be fixed" without actually testing first.**
+
+### Mandatory Testing Protocol:
+
+1. **ALWAYS use @Browser tools to test every function before claiming it works:**
+   - Navigate to the page/URL
+   - Take a screenshot/snapshot to see the actual state
+   - Check browser console for errors
+   - Check network requests
+   - Test the actual functionality (click buttons, fill forms, etc.)
+   - Check application logs
+
+2. **Testing Steps for Every Fix:**
+   - Use `browser_navigate` to go to the page
+   - Use `browser_snapshot` to see the current state
+   - Use `browser_console_messages` to check for JavaScript errors
+   - Use `browser_network_requests` to check for failed requests
+   - Use `docker logs` to check server-side errors
+   - Actually interact with the page using `browser_click`, `browser_type`, etc.
+   - Verify the functionality works as expected
+
+3. **Only after successful testing:**
+   - Provide a response confirming what was tested
+   - Include evidence (screenshots, log excerpts, etc.)
+   - State what actually works, not what "should work"
+
+4. **If testing fails:**
+   - Report the actual error/issue found
+   - Fix the issue
+   - Test again before responding
+
+### Example of CORRECT response:
+"Tested the edit page functionality:
+- Navigated to /pages/blog-aihub/posts/test/edit
+- Screenshot shows editor is loaded
+- Console shows no errors
+- Clicked Edit button - successfully navigated to edit page
+- Editor component mounted correctly
+- Logs show 200 OK response
+✅ Confirmed: Edit functionality is working"
+
+### Example of INCORRECT response:
+"Should work now. I've made the changes. Please test."
+
+**Remember: Test first, then respond. Never assume something works without verification.**
+

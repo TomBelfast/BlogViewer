@@ -21,7 +21,7 @@ Rails.application.configure do
   config.public_file_server.enabled = true
 
   # Do not fall back to assets pipeline if a precompiled asset is missed.
-  config.assets.compile = false
+  config.assets.compile = true
 
   config.assets.gzip = false
 
@@ -29,12 +29,25 @@ Rails.application.configure do
   # config.asset_host = "http://assets.example.com"
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
+  # Use MinIO (S3-compatible) storage if credentials are provided
+  s3_access_key = ENV.fetch('S3_ACCESS_KEY_ID', '')
+  s3_secret_key = ENV.fetch('S3_SECRET_ACCESS_KEY', '')
+  s3_bucket = ENV.fetch('S3_BUCKET', '')
+  s3_endpoint = ENV.fetch('S3_ENDPOINT', '')
 
-  s3_enabled = ENV.fetch('S3_ACCESS_KEY_ID', Rails.application.credentials.dig(Rails.env.to_sym, :s3, :access_key_id)).present?
-  if s3_enabled
-    config.active_storage.service = :s3
+  # Try to use S3/MinIO if credentials are provided and gem is available
+  if s3_access_key.present? && s3_secret_key.present? && s3_bucket.present? && s3_endpoint.present?
+    begin
+      require 'aws-sdk-s3'
+      config.active_storage.service = :s3
+      Rails.logger&.info "Using MinIO/S3 storage: #{s3_endpoint}"
+    rescue LoadError => e
+      config.active_storage.service = :local
+      Rails.logger&.warn "aws-sdk-s3 gem not available, using local storage: #{e.message}"
+    end
   else
     config.active_storage.service = :local
+    Rails.logger&.info "Using local storage (S3 credentials not fully configured)"
   end
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
@@ -57,6 +70,15 @@ Rails.application.configure do
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
   config.active_job.queue_adapter = :sidekiq
+  
+  # Konfiguracja Sidekiq z Redis
+  redis_url = ENV.fetch('REDIS_URL', 'redis://redis:6379/0')
+  Sidekiq.configure_server do |config|
+    config.redis = { url: redis_url }
+  end
+  Sidekiq.configure_client do |config|
+    config.redis = { url: redis_url }
+  end
 
   # Prevent health checks from clogging up the logs.
   config.silence_healthcheck_path = "/up"
@@ -69,7 +91,7 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  fronted_url = ENV.fetch('FRONTEND_URL', Rails.application.credentials.dig(Rails.env.to_sym, :frontend_url))
+  fronted_url = ENV.fetch('FRONTEND_URL', Rails.application.credentials.dig(Rails.env.to_sym, :frontend_url)) || 'http://localhost:3000'
   config.action_mailer.default_url_options = { host: fronted_url }
 
   # Specify outgoing SMTP server. Remember to add smtp/* credentials via rails credentials:edit.
@@ -92,8 +114,16 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [:id]
 
   config.hosts = nil
-  Rails.application.routes.default_url_options = { host: "#{URI.parse(fronted_url).host}" }
-  config.action_controller.asset_host = fronted_url
+  if fronted_url.present?
+    parsed_url = URI.parse(fronted_url)
+    Rails.application.routes.default_url_options = { 
+      host: parsed_url.host,
+      protocol: parsed_url.scheme || 'https'
+    }
+    config.action_controller.asset_host = fronted_url
+    # Ustaw domyślny protokół dla Active Storage URL-i
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
+  end
 
   smtp_enabled = ENV.fetch('SMTP_MAIL_ADDRESS', Rails.application.credentials.dig(Rails.env.to_sym, :smtp_mail, :address)).present?
   if smtp_enabled

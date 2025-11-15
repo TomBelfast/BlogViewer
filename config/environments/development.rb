@@ -29,7 +29,13 @@ Rails.application.configure do
   config.cache_store = :memory_store
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Automatically switch to S3 if credentials are provided
+  s3_enabled = ENV.fetch('S3_ACCESS_KEY_ID', '').present?
+  if s3_enabled
+    config.active_storage.service = :s3
+  else
+    config.active_storage.service = :local
+  end
 
   # Don't care if the mailer can't send.
   config.action_mailer.raise_delivery_errors = false
@@ -42,7 +48,7 @@ Rails.application.configure do
   config.action_mailer.perform_deliveries = true
 
   # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "blogbowl.test" }
+  config.action_mailer.default_url_options = { host: "localhost:3000" }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -79,10 +85,12 @@ Rails.application.configure do
   # config.generators.apply_rubocop_autocorrect_after_generate!
 
   config.hosts = nil
-  Rails.application.routes.default_url_options[:host] = "blogbowl.test"
-  config.asset_host = "https://blogbowl.test"
+  Rails.application.routes.default_url_options[:host] = "localhost:3000"
+  # Wyłącz asset_host w development, aby używać względnych ścieżek
+  config.asset_host = nil
+  config.action_controller.asset_host = nil
 
-  config.force_ssl = true
-  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/api/internal/domain/verify" ||
-    request.path == "/api/internal/analytics/user" } } }
+  config.force_ssl = false
+  # config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/api/internal/domain/verify" ||
+  #   request.path == "/api/internal/analytics/user" } } }
 end

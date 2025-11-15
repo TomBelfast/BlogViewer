@@ -7,10 +7,10 @@ default: &default
 
 development:
   <<: *default
-  username: development
-  password: development
-  host: localhost
-  port: 5435
+  username: <%= ENV.fetch('DB_USERNAME', 'development') %>
+  password: <%= ENV.fetch('DB_PASSWORD', 'development') %>
+  host: <%= ENV.fetch('DB_HOST', 'localhost') %>
+  port: <%= ENV.fetch('DB_PORT', 5435) %>
 
 test:
   <<: *default

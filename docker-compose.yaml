@@ -11,6 +11,9 @@ services:
     environment:
       - NODE_ENV=production
       - RAILS_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       postgres:
         condition: service_healthy
@@ -24,24 +27,28 @@ services:
     image: blogbowl/blogbowl:latest
     env_file:
       - .env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
     restart: unless-stopped
 
   postgres:
-    image: postgres:latest
+    image: postgres:15
+    container_name: blogbowl-postgres-1
     environment:
       POSTGRES_DB: blogbowl
       POSTGRES_USER: blogbowl
       # Do not forget to generate a new password for production environment
       POSTGRES_PASSWORD: blogbowl
     volumes:
-      - bb_postgres_data:/var/lib/postgresql/data
+      - /mnt/data/blogbowl/postgres:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5435:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -50,16 +57,18 @@ services:
 
   redis:
     image: redis:latest
+    container_name: blogbowl-redis-1
     command: redis-server --appendonly yes
     volumes:
-      - blogbowl_redis_data:/data
+      - /mnt/data/blogbowl/redis:/data
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 1s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -67,6 +76,9 @@ services:
           memory: 128M
 
 volumes:
-  bb_postgres_data:
-  blogbowl_redis_data:
   blogbowl_storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /mnt/data/blogbowl/storage

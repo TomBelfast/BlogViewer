@@ -38,5 +38,10 @@ module Blogbowl
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # Add submodules/javascript to asset paths for Propshaft
+    config.assets.paths << Rails.root.join('submodules/core/javascript')
+    # Add app/assets/builds to asset paths for Propshaft
+    config.assets.paths << Rails.root.join('app/assets/builds')
   end
 end

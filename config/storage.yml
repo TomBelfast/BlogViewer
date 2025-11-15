@@ -8,8 +8,10 @@ local:
 
 s3:
   service: S3
-  access_key_id: <%= ENV.fetch('S3_ACCESS_KEY_ID', Rails.application.credentials.dig(Rails.env.to_sym, :s3, :access_key_id)) %>
-  secret_access_key: <%= ENV.fetch('S3_SECRET_ACCESS_KEY', Rails.application.credentials.dig(Rails.env.to_sym, :s3, :secret_access_key)) %>
-  endpoint: <%= ENV.fetch('S3_ENDPOINT', Rails.application.credentials.dig(Rails.env.to_sym, :s3, :endpoint)) %>
-  region: <%= ENV.fetch('S3_REGION', Rails.application.credentials.dig(Rails.env.to_sym, :s3, :region)) %>
-  bucket: <%= ENV.fetch('S3_BUCKET', Rails.application.credentials.dig(Rails.env.to_sym, :s3, :bucket)) %>
+  access_key_id: <%= ENV['S3_ACCESS_KEY_ID'] %>
+  secret_access_key: <%= ENV['S3_SECRET_ACCESS_KEY'] %>
+  endpoint: <%= ENV['S3_ENDPOINT'] %>
+  region: <%= ENV['S3_REGION'] %>
+  bucket: <%= ENV['S3_BUCKET'] %>
+  force_path_style: true
+  use_ssl: false
