@@ -63,7 +63,7 @@ gem "active_storage_validations", "~> 2.0"
 
 gem "cancancan", "~> 3.6"
 
-gem "pagy", "~> 9.3"
+gem "pagy", "~> 43.0"
 
 gem "ruby-vips", "~> 2.2"
 
